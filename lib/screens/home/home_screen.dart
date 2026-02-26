@@ -5,6 +5,7 @@ import '../../config/app_theme.dart';
 import '../../data/mock_data.dart';
 import '../../providers/interaction_provider.dart';
 import '../../widgets/video_player_widget.dart';
+import '../../widgets/comments_sheet.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -245,10 +246,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SizedBox(height: 20),
 
         // ─── Comments ───
-        _buildActionButton(
-          icon: Icons.chat_bubble_rounded,
-          label: lesson.comments.toString(),
-          color: Colors.white,
+        GestureDetector(
+          onTap: () => showCommentsSheet(context, ref, lesson.id),
+          child: _buildActionButton(
+            icon: Icons.chat_bubble_rounded,
+            label: lesson.comments.toString(),
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 20),
 

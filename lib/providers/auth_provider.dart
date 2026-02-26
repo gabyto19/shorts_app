@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/firestore_service.dart';
 
 // ─── Auth State Provider ───
 // Watches Firebase auth state changes and emits User? stream
@@ -7,29 +8,52 @@ final authStateProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
 });
 
+// ─── Firestore Service Provider ───
+final firestoreServiceProvider = Provider<FirestoreService>((ref) {
+  return FirestoreService();
+});
+
 // ─── Auth Service Provider ───
 final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService();
+  final firestore = ref.read(firestoreServiceProvider);
+  return AuthService(firestore);
 });
 
 // ─── Auth Service ───
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService _firestore;
+
+  AuthService(this._firestore);
 
   User? get currentUser => _auth.currentUser;
 
   /// Sign in with email & password
+  /// Marks onboarding as complete (existing users skip onboarding)
   Future<UserCredential> signIn({
     required String email,
     required String password,
   }) async {
-    return await _auth.signInWithEmailAndPassword(
+    final credential = await _auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
+
+    // Existing users who sign in have already been through the app,
+    // so mark onboarding as complete to skip it
+    if (credential.user != null) {
+      try {
+        await _firestore.updateUserProfile({'onboardingComplete': true});
+      } catch (_) {
+        // Ignore if profile doesn't exist yet
+      }
+    }
+
+    return credential;
   }
 
   /// Create a new account with email & password
+  /// Also creates a user profile document in Firestore
   Future<UserCredential> signUp({
     required String name,
     required String email,
@@ -43,6 +67,15 @@ class AuthService {
     // Update display name
     await credential.user?.updateDisplayName(name.trim());
     await credential.user?.reload();
+
+    // Create Firestore user profile
+    if (credential.user != null) {
+      await _firestore.createUserProfile(
+        uid: credential.user!.uid,
+        displayName: name.trim(),
+        email: email.trim(),
+      );
+    }
 
     return credential;
   }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/interaction_provider.dart';
+import '../onboarding/onboarding_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -97,19 +99,19 @@ class ProfileScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStat('12', 'Courses'),
+                    _buildStat('${ref.watch(likesProvider).length}', 'Liked'),
                     Container(
                       width: 1,
                       height: 40,
                       color: AppTheme.dividerColor,
                     ),
-                    _buildStat('48', 'Hours'),
+                    _buildStat('${ref.watch(savedProvider).length}', 'Saved'),
                     Container(
                       width: 1,
                       height: 40,
                       color: AppTheme.dividerColor,
                     ),
-                    _buildStat('156', 'Clips'),
+                    _buildStat('${ref.watch(followsProvider).length}', 'Following'),
                   ],
                 ),
               ),
@@ -146,6 +148,23 @@ class ProfileScreen extends ConsumerWidget {
                 title: 'Study Groups',
                 subtitle: '2 active groups',
                 color: const Color(0xFFE040FB),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => OnboardingScreen(
+                        onComplete: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  );
+                },
+                child: _buildMenuItem(
+                  icon: Icons.tune_rounded,
+                  title: 'Change Interests & Goals',
+                  subtitle: 'Update your preferences',
+                  color: const Color(0xFFFF6F61),
+                ),
               ),
               _buildMenuItem(
                 icon: Icons.help_outline_rounded,
