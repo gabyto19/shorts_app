@@ -16,6 +16,7 @@ class VideoLesson {
   final String duration;
   final String currentTime;
   final List<Color> gradientColors;
+  final String? videoUrl;
 
   const VideoLesson({
     required this.id,
@@ -30,6 +31,7 @@ class VideoLesson {
     required this.duration,
     required this.currentTime,
     required this.gradientColors,
+    this.videoUrl,
   });
 }
 
@@ -116,6 +118,7 @@ final List<VideoLesson> mockVideoLessons = [
     duration: '1:00',
     currentTime: '0:45',
     gradientColors: [Color(0xFF0D2137), Color(0xFF0A4D68), Color(0xFF088395)],
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
   ),
   VideoLesson(
     id: '2',
@@ -130,6 +133,7 @@ final List<VideoLesson> mockVideoLessons = [
     duration: '1:30',
     currentTime: '0:27',
     gradientColors: [Color(0xFF1A0A2E), Color(0xFF2D1B69), Color(0xFF7B2D8E)],
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
   ),
   VideoLesson(
     id: '3',
@@ -144,6 +148,7 @@ final List<VideoLesson> mockVideoLessons = [
     duration: '2:00',
     currentTime: '1:06',
     gradientColors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
   ),
   VideoLesson(
     id: '4',
@@ -158,6 +163,7 @@ final List<VideoLesson> mockVideoLessons = [
     duration: '1:15',
     currentTime: '0:08',
     gradientColors: [Color(0xFF16222A), Color(0xFF3A6073), Color(0xFF283E51)],
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
   ),
   VideoLesson(
     id: '5',
@@ -172,6 +178,7 @@ final List<VideoLesson> mockVideoLessons = [
     duration: '1:45',
     currentTime: '1:36',
     gradientColors: [Color(0xFF0C0C1D), Color(0xFF1B1464), Color(0xFF6C63FF)],
+    videoUrl: 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
   ),
 ];
 

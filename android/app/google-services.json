@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "284787433336",
+    "project_id": "shorts-b8be6",
+    "storage_bucket": "shorts-b8be6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:284787433336:android:cbee36f34e02d7ca31b28d",
+        "android_client_info": {
+          "package_name": "com.antigravity.shorts_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeCBA8ObhNP-hEgKb1zKCMC5sB1fQ5QhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

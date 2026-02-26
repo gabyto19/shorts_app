@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../config/app_theme.dart';
 import '../../data/mock_data.dart';
+import 'course_detail_screen.dart';
+import 'search_screen.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
@@ -101,28 +103,35 @@ class DiscoverScreen extends StatelessWidget {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.dividerColor, width: 0.5),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.search_rounded, color: AppTheme.textTertiary, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Search topics, skills, news...',
-                style: TextStyle(
-                  color: AppTheme.textTertiary,
-                  fontSize: 14,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SearchScreen()),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.dividerColor, width: 0.5),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.search_rounded, color: AppTheme.textTertiary, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Search topics, skills, news...',
+                  style: TextStyle(
+                    color: AppTheme.textTertiary,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-            ),
-            Icon(Icons.mic_none_rounded, color: AppTheme.textTertiary, size: 22),
-          ],
+              Icon(Icons.mic_none_rounded, color: AppTheme.textTertiary, size: 22),
+            ],
+          ),
         ),
       ),
     );
@@ -162,29 +171,38 @@ class DiscoverScreen extends StatelessWidget {
               final isFirst = index == 0;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: isFirst ? AppTheme.primaryGradient : null,
-                    color: isFirst ? null : AppTheme.chipBg,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isFirst) ...[
-                        const Icon(Icons.bolt_rounded, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
-                      ],
-                      Text(
-                        trendingTopics[index],
-                        style: TextStyle(
-                          color: isFirst ? Colors.white : AppTheme.textSecondary,
-                          fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
-                          fontSize: 13,
-                        ),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => SearchScreen(initialQuery: trendingTopics[index]),
                       ),
-                    ],
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: isFirst ? AppTheme.primaryGradient : null,
+                      color: isFirst ? null : AppTheme.chipBg,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isFirst) ...[
+                          const Icon(Icons.bolt_rounded, color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          trendingTopics[index],
+                          style: TextStyle(
+                            color: isFirst ? Colors.white : AppTheme.textSecondary,
+                            fontWeight: isFirst ? FontWeight.w600 : FontWeight.w400,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -198,16 +216,26 @@ class DiscoverScreen extends StatelessWidget {
   Widget _buildFeaturedCourse(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: featuredCourse.gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        ),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => CourseDetailScreen(course: featuredCourse),
+            ),
+          );
+        },
+        child: Hero(
+          tag: 'course_${featuredCourse.id}',
+          child: Container(
+            height: 200,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: featuredCourse.gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            ),
         child: Stack(
           children: [
             // Decorative circles
@@ -299,10 +327,12 @@ class DiscoverScreen extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          ],  // close Stack children
+        ),  // close Stack
+      ),  // close Container (Hero child)
+      ),  // close Hero
+      ),  // close GestureDetector
+    );  // close Padding
   }
 
   Widget _buildSkillPathsHeader(BuildContext context) {
@@ -316,13 +346,23 @@ class DiscoverScreen extends StatelessWidget {
   }
 
   Widget _buildSkillPathCard(BuildContext context, Course course) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.cardBg,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.dividerColor, width: 0.5),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CourseDetailScreen(course: course),
+          ),
+        );
+      },
+      child: Hero(
+        tag: 'course_${course.id}',
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.cardBg,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(color: AppTheme.dividerColor, width: 0.5),
+          ),
+          clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -470,6 +510,8 @@ class DiscoverScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      ),
       ),
     );
   }

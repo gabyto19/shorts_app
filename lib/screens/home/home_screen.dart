@@ -1,19 +1,34 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/app_theme.dart';
 import '../../data/mock_data.dart';
+import '../../providers/interaction_provider.dart';
+import '../../widgets/video_player_widget.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   int _activeTab = 0; // 0 = For You, 1 = My Courses
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize like counts from mock data
+    Future.microtask(() {
+      final likesNotifier = ref.read(likesProvider.notifier);
+      for (final lesson in mockVideoLessons) {
+        likesNotifier.initCount(lesson.id, lesson.likes);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -30,6 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch all interaction states
+    ref.watch(likesProvider);
+    ref.watch(savedProvider);
+    ref.watch(followsProvider);
+
     return Stack(
       children: [
         // ─── Video Feed ───
@@ -125,60 +145,61 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildVideoCard(VideoLesson lesson) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: lesson.gradientColors,
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    final isActive = mockVideoLessons.indexOf(lesson) == _currentPage;
+    return Stack(
+      children: [
+        // ─── Video Background ───
+        Positioned.fill(
+          child: LessonVideoPlayer(
+            videoUrl: lesson.videoUrl,
+            fallbackGradient: lesson.gradientColors,
+            isActive: isActive,
+          ),
         ),
-      ),
-      child: Stack(
-        children: [
-          // ─── Decorative Background ───
-          _buildBackgroundDecor(lesson),
 
-          // ─── Bottom Gradient Overlay ───
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: MediaQuery.of(context).size.height * 0.5,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.transparent, Color(0xDD000000)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+        // ─── Decorative Background ───
+        _buildBackgroundDecor(lesson),
+
+        // ─── Bottom Gradient Overlay ───
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: MediaQuery.of(context).size.height * 0.5,
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.transparent, Color(0xDD000000)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
           ),
+        ),
 
-          // ─── Right Side Actions ───
-          Positioned(
-            right: 12,
-            bottom: 200,
-            child: _buildActionButtons(lesson),
-          ),
+        // ─── Right Side Actions ───
+        Positioned(
+          right: 12,
+          bottom: 200,
+          child: _buildActionButtons(lesson),
+        ),
 
-          // ─── Bottom Content ───
-          Positioned(
-            bottom: 80,
-            left: 16,
-            right: 70,
-            child: _buildBottomContent(lesson),
-          ),
+        // ─── Bottom Content ───
+        Positioned(
+          bottom: 80,
+          left: 16,
+          right: 70,
+          child: _buildBottomContent(lesson),
+        ),
 
-          // ─── Lesson Progress Bar ───
-          Positioned(
-            bottom: 70,
-            left: 16,
-            right: 16,
-            child: _buildProgressBar(lesson),
-          ),
-        ],
-      ),
+        // ─── Lesson Progress Bar ───
+        Positioned(
+          bottom: 70,
+          left: 16,
+          right: 16,
+          child: _buildProgressBar(lesson),
+        ),
+      ],
     );
   }
 
@@ -192,33 +213,77 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildActionButtons(VideoLesson lesson) {
+    final likesNotifier = ref.read(likesProvider.notifier);
+    final savedNotifier = ref.read(savedProvider.notifier);
+    final isLiked = likesNotifier.isLiked(lesson.id);
+    final likeCount = likesNotifier.getCount(lesson.id);
+    final isSaved = savedNotifier.isSaved(lesson.id);
+
     return Column(
       children: [
-        _buildActionButton(
-          icon: Icons.favorite_rounded,
-          label: _formatNumber(lesson.likes),
-          color: Colors.white,
+        // ─── Like ───
+        GestureDetector(
+          onTap: () => ref.read(likesProvider.notifier).toggle(lesson.id),
+          child: Column(
+            children: [
+              Icon(
+                isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                color: isLiked ? const Color(0xFFFF4757) : Colors.white.withOpacity(0.9),
+                size: 28,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _formatNumber(likeCount),
+                style: TextStyle(
+                  color: isLiked ? const Color(0xFFFF4757) : Colors.white.withOpacity(0.8),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 20),
+
+        // ─── Comments ───
         _buildActionButton(
           icon: Icons.chat_bubble_rounded,
           label: lesson.comments.toString(),
           color: Colors.white,
         ),
         const SizedBox(height: 20),
-        _buildActionButton(
-          icon: Icons.bookmark_rounded,
-          label: 'Save',
-          color: Colors.white,
+
+        // ─── Save / Bookmark ───
+        GestureDetector(
+          onTap: () => ref.read(savedProvider.notifier).toggle(lesson.id),
+          child: Column(
+            children: [
+              Icon(
+                isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                color: isSaved ? AppTheme.primaryBlue : Colors.white.withOpacity(0.9),
+                size: 28,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isSaved ? 'Saved' : 'Save',
+                style: TextStyle(
+                  color: isSaved ? AppTheme.primaryBlue : Colors.white.withOpacity(0.8),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 20),
+
+        // ─── Share ───
         _buildActionButton(
           icon: Icons.share_rounded,
           label: 'Share',
           color: Colors.white,
         ),
         const SizedBox(height: 20),
-        // Creator avatar
+
+        // ─── Creator avatar ───
         Container(
           width: 40,
           height: 40,
@@ -262,6 +327,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBottomContent(VideoLesson lesson) {
+    final followsNotifier = ref.read(followsProvider.notifier);
+    final isFollowing = followsNotifier.isFollowing(lesson.creatorName);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -299,15 +367,26 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white.withOpacity(0.4)),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'Follow',
-                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+            GestureDetector(
+              onTap: () => ref.read(followsProvider.notifier).toggle(lesson.creatorName),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isFollowing ? AppTheme.primaryBlue : Colors.transparent,
+                  border: Border.all(
+                    color: isFollowing ? AppTheme.primaryBlue : Colors.white.withOpacity(0.4),
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  isFollowing ? 'Following' : 'Follow',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: isFollowing ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
               ),
             ),
           ],

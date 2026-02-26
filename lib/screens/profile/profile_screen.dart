@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/app_theme.dart';
+import '../../providers/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authService = ref.read(authServiceProvider);
+    final user = authService.currentUser;
+    final displayName = user?.displayName ?? 'User';
+    final initials = displayName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
+    final email = user?.email ?? '';
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
       body: SafeArea(
@@ -53,10 +60,10 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    'JD',
-                    style: TextStyle(
+                    initials,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
                       fontSize: 32,
@@ -65,9 +72,9 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'John Doe',
-                style: TextStyle(
+              Text(
+                displayName,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 22,
@@ -75,7 +82,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Full Stack Developer',
+                email,
                 style: TextStyle(
                   color: AppTheme.textSecondary,
                   fontSize: 14,
@@ -145,6 +152,55 @@ class ProfileScreen extends StatelessWidget {
                 title: 'Help & Support',
                 subtitle: 'FAQs and contact',
                 color: AppTheme.textSecondary,
+              ),
+
+              const SizedBox(height: 8),
+
+              // ─── Sign Out ───
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                child: GestureDetector(
+                  onTap: () async {
+                    await ref.read(authServiceProvider).signOut();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorRed.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      border: Border.all(color: AppTheme.errorRed.withOpacity(0.2), width: 0.5),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppTheme.errorRed.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.logout_rounded, color: AppTheme.errorRed, size: 22),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Text(
+                            'Sign Out',
+                            style: TextStyle(
+                              color: AppTheme.errorRed,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppTheme.errorRed.withOpacity(0.5),
+                          size: 22,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 100),
